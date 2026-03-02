@@ -19,7 +19,6 @@ spec:
         camera: "13"
     spec:
       hostNetwork: true
-      # Tempo para o script microservices.sh fechar o vídeo com calma
       terminationGracePeriodSeconds: 40
       containers:
       - name: ffmpeg
@@ -34,6 +33,8 @@ spec:
         env:
         - name: CAMERA_IP
           value: "192.168.1.13"
+        - name: TZ
+          value: "America/Sao_Paulo"
         startupProbe:
           exec:
             command: ["pgrep", "ffmpeg"]
@@ -47,11 +48,17 @@ spec:
         volumeMounts:
         - name: storage
           mountPath: /1tb/video
+        - name: timezone
+          mountPath: /etc/localtime
+          readOnly: true
       volumes:
       - name: storage
         hostPath:
           path: /1tb/video
           type: DirectoryOrCreate
+      - name: timezone
+        hostPath:
+          path: /usr/share/zoneinfo/America/Sao_Paulo
 ---
 # ---------------------------------------------------------
 # Câmera IP .132
@@ -88,6 +95,8 @@ spec:
         env:
         - name: CAMERA_IP
           value: "192.168.1.132"
+        - name: TZ
+          value: "America/Sao_Paulo"
         startupProbe:
           exec:
             command: ["pgrep", "ffmpeg"]
@@ -101,11 +110,17 @@ spec:
         volumeMounts:
         - name: storage
           mountPath: /1tb/video
+        - name: timezone
+          mountPath: /etc/localtime
+          readOnly: true
       volumes:
       - name: storage
         hostPath:
           path: /1tb/video
           type: DirectoryOrCreate
+      - name: timezone
+        hostPath:
+          path: /usr/share/zoneinfo/America/Sao_Paulo
 ---
 # ---------------------------------------------------------
 # Câmera IP .83
@@ -142,6 +157,8 @@ spec:
         env:
         - name: CAMERA_IP
           value: "192.168.1.83"
+        - name: TZ
+          value: "America/Sao_Paulo"
         startupProbe:
           exec:
             command: ["pgrep", "ffmpeg"]
@@ -155,8 +172,14 @@ spec:
         volumeMounts:
         - name: storage
           mountPath: /1tb/video
+        - name: timezone
+          mountPath: /etc/localtime
+          readOnly: true
       volumes:
       - name: storage
         hostPath:
           path: /1tb/video
           type: DirectoryOrCreate
+      - name: timezone
+        hostPath:
+          path: /usr/share/zoneinfo/America/Sao_Paulo

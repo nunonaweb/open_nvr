@@ -1,7 +1,7 @@
 FROM alpine:3.18
 
 # Instala ffmpeg, bash e ferramentas de rede (iputils para o ping)
-RUN apk add --no-cache ffmpeg bash iputils
+RUN apk add --no-cache ffmpeg bash iputils tzdata
 
 # Cria o diretório de trabalho e o ponto de montagem
 WORKDIR /app
