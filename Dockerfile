@@ -1,19 +1,20 @@
 FROM alpine:3.18
 
-# Instala ffmpeg, bash e ferramentas de rede
+# Instala ffmpeg, bash e ferramentas de rede (iputils para o ping)
 RUN apk add --no-cache ffmpeg bash iputils
 
-# Cria o diretório de vídeos
+# Cria o diretório de trabalho e o ponto de montagem
 WORKDIR /app
-RUN mkdir -p /videos
+RUN mkdir -p /1tb/video
 
-# Copia o script para dentro do container
+# Copia o script mantendo o nome ou renomeando (ajustado para o que o YAML espera)
 COPY microservices.sh /app/record.sh
 RUN chmod +x /app/record.sh
 
-# Define o volume para persistência
-VOLUME ["/videos"]
+# Não precisamos da instrução VOLUME aqui, pois o Kubernetes gerencia o HostPath
+# Mas vamos garantir que o diretório tenha permissões
+RUN chmod 777 /1tb/video
 
-# Executa o script
+# Executa o script. 
+# Usar a forma de "exec" (com colchetes) é melhor para o repasse de sinais
 ENTRYPOINT ["/bin/bash", "/app/record.sh"]
-

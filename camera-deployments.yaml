@@ -1,0 +1,162 @@
+# ---------------------------------------------------------
+# Câmera IP .13
+# ---------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cam-recorder-13
+  namespace: nvr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: recorder
+      camera: "13"
+  template:
+    metadata:
+      labels:
+        app: recorder
+        camera: "13"
+    spec:
+      hostNetwork: true
+      # Tempo para o script microservices.sh fechar o vídeo com calma
+      terminationGracePeriodSeconds: 40
+      containers:
+      - name: ffmpeg
+        image: camera-recorder:v1
+        resources:
+          limits:
+            cpu: "800m"
+            memory: "2Gi"
+          requests:
+            cpu: "300m"
+            memory: "512Mi"
+        env:
+        - name: CAMERA_IP
+          value: "192.168.1.13"
+        startupProbe:
+          exec:
+            command: ["pgrep", "ffmpeg"]
+          initialDelaySeconds: 15
+          periodSeconds: 5
+          failureThreshold: 10
+        livenessProbe:
+          exec:
+            command: ["pgrep", "ffmpeg"]
+          periodSeconds: 30
+        volumeMounts:
+        - name: storage
+          mountPath: /1tb/video
+      volumes:
+      - name: storage
+        hostPath:
+          path: /1tb/video
+          type: DirectoryOrCreate
+---
+# ---------------------------------------------------------
+# Câmera IP .132
+# ---------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cam-recorder-132
+  namespace: nvr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: recorder
+      camera: "132"
+  template:
+    metadata:
+      labels:
+        app: recorder
+        camera: "132"
+    spec:
+      hostNetwork: true
+      terminationGracePeriodSeconds: 40
+      containers:
+      - name: ffmpeg
+        image: camera-recorder:v1
+        resources:
+          limits:
+            cpu: "800m"
+            memory: "2Gi"
+          requests:
+            cpu: "300m"
+            memory: "512Mi"
+        env:
+        - name: CAMERA_IP
+          value: "192.168.1.132"
+        startupProbe:
+          exec:
+            command: ["pgrep", "ffmpeg"]
+          initialDelaySeconds: 15
+          periodSeconds: 5
+          failureThreshold: 10
+        livenessProbe:
+          exec:
+            command: ["pgrep", "ffmpeg"]
+          periodSeconds: 30
+        volumeMounts:
+        - name: storage
+          mountPath: /1tb/video
+      volumes:
+      - name: storage
+        hostPath:
+          path: /1tb/video
+          type: DirectoryOrCreate
+---
+# ---------------------------------------------------------
+# Câmera IP .83
+# ---------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cam-recorder-83
+  namespace: nvr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: recorder
+      camera: "83"
+  template:
+    metadata:
+      labels:
+        app: recorder
+        camera: "83"
+    spec:
+      hostNetwork: true
+      terminationGracePeriodSeconds: 40
+      containers:
+      - name: ffmpeg
+        image: camera-recorder:v1
+        resources:
+          limits:
+            cpu: "800m"
+            memory: "2Gi"
+          requests:
+            cpu: "300m"
+            memory: "512Mi"
+        env:
+        - name: CAMERA_IP
+          value: "192.168.1.83"
+        startupProbe:
+          exec:
+            command: ["pgrep", "ffmpeg"]
+          initialDelaySeconds: 15
+          periodSeconds: 5
+          failureThreshold: 10
+        livenessProbe:
+          exec:
+            command: ["pgrep", "ffmpeg"]
+          periodSeconds: 30
+        volumeMounts:
+        - name: storage
+          mountPath: /1tb/video
+      volumes:
+      - name: storage
+        hostPath:
+          path: /1tb/video
+          type: DirectoryOrCreate

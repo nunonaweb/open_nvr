@@ -1,56 +1,49 @@
 #!/bin/bash
 # /app/record.sh (dentro do container)
 
-# Configurações fixas (podem ser movidas para Env Vars depois se desejar)
 dir='/1tb/video'
 user='python'
 senha='mandrake'
-
-# O IP é injetado pelo Kubernetes via Variável de Ambiente
 ip=$CAMERA_IP
 
-# Garante que o diretório de destino existe
+cleanup() {
+    echo "Sinal de interrupção recebido! Encerrando FFmpeg graciosamente..."
+    kill -SIGINT $FFMPEG_PID
+    wait $FFMPEG_PID
+    exit 0
+}
+
+trap cleanup SIGTERM SIGINT
 mkdir -p "$dir"
 
-# Verifica se a variável CAMERA_IP foi passada
 if [ -z "$ip" ]; then
     echo "ERRO: A variável CAMERA_IP não foi definida."
     exit 1
 fi
 
-# Obtém a data/hora para o nome do arquivo
-ano=$(date +%Y)
-mes=$(date +%m)
-dia=$(date +%d)
-hora=$(date +%H)
-minuto=$(date +%M)
-
-# Extrai o final do IP para identificação no nome do arquivo
-numero_ip=$(echo "$ip" | sed 's/.*\.//')
-nome_arquivo="$dir/$ano$mes$dia$hora$minuto-$numero_ip.mp4"
-
 echo "--- Iniciando Monitoramento da Câmera: $ip ---"
 
-# Verifica se a câmera está acessível antes de iniciar
 if ping -c 1 -W 2 "$ip" &> /dev/null; then
-    data_log=$(date "+%Y-%m-%d %H:%M:%S")
-    echo "$data_log - IP $ip está ONLINE. Iniciando gravação." >> "$dir/pingao.log"
-    
-    echo "Gravando em: $nome_arquivo"
+    echo "$(date "+%Y-%m-%d %H:%M:%S") - IP $ip ONLINE. Gravando em MKV segmentado." >> "$dir/pingao.log"
 
-    # EXECUÇÃO DO FFMPEG
-    # Note: Removemos o '&' do final. O container viverá enquanto o ffmpeg rodar.
-    ffmpeg -rtsp_transport tcp -i rtsp://$user:$senha@"$ip":554 \
-        -map 0:v -c:v libx264 -preset ultrafast -crf 23 \
-        -pix_fmt yuv420p -an -vsync 1 \
-        "$nome_arquivo"
+    # MUDANÇA PARA MKV SEGMENTADO
+    # O MKV aceita melhor interrupções bruscas sem corromper o arquivo inteiro
+    ffmpeg -rtsp_transport tcp -i "rtsp://$user:$senha@$ip:554" \
+        -c:v copy -an \
+        -f segment \
+        -segment_time 600 \
+        -segment_atclocktime 1 \
+        -strftime 1 \
+        -reset_timestamps 1 \
+        "$dir/%Y%m%d%H%M%S-${ip##*.}.mkv" &
     
-    # Se o ffmpeg parar, o script chegará aqui e o container será reiniciado pelo K8s
+    FFMPEG_PID=$!
+    wait $FFMPEG_PID
+    
     exit_status=$?
     echo "FFmpeg encerrou com status: $exit_status"
     exit $exit_status
-
 else
-    echo "ALERTA: O IP $ip não respondeu ao ping. Abortando para reinício automático."
+    echo "ALERTA: O IP $ip OFFLINE."
     exit 1
 fi
